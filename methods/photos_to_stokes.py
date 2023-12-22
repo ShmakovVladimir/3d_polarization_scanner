@@ -1,6 +1,8 @@
 import numpy as np
 
-stokes_parametrs = np.loadtxt('stokes_parametrs.txt')
+stokes_parametrs = [[0.5, 0.5, 0.5, 0.5],
+                    [1, -1, 0, 0],
+                    [0, 0, 1, -1]]
 def polarization(polarization_0: np.ndarray,
                  polarization_90: np.ndarray,
                  polarization_45: np.ndarray,
