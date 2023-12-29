@@ -35,3 +35,17 @@ def polarization(polarization_0: np.ndarray,
             's1': s[1],
             's2': s[2]}
 
+def polarization_degree_to_reflection_angle(dolp: np.ndarray, n: float = 1.7) -> np.ndarray:
+    """Функция, обратная к `diffuse_polarization_degree`. Рассчет угла отражения по степени поляризации.
+
+    Args:
+        dolp (np.ndarray): Степень поляризации
+        n (float, optional): Показатель преломления. Defaults to 1.7.
+
+    Returns:
+        np.ndarray: Угол отражения
+    """
+    temp = np.sqrt((2 * dolp + 2 * n**2 * dolp - 2 * n**2 + n**4 + dolp**2 + 4 * n**2 * dolp**2 - n**4 * dolp**2 - 4 * n**3 * dolp * np.sqrt(-(dolp - 1) * (dolp + 1))) + 1) / np.sqrt(n**4 * dolp**2 + 2 * n**4 * dolp + n**4 + 6 * n**2 * dolp**2 + 4 * n**2 * dolp - 2 * n**2 + dolp**2 + 2 * dolp + 1)
+    temp = np.minimum(np.real(temp), 1)
+    theta_val = np.arccos(temp)
+    return theta_val
