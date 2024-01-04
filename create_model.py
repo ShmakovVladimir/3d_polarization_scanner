@@ -13,7 +13,7 @@ def main(n_value: float, model_name: str, camera_port: int):
     parent_dir = os.getcwd()
     path = os.path.join(parent_dir, f'results/{model_name}') 
     os.mkdir(path) 
-    port = serial.Serial('/dev/ttyUSB0', 9600)
+    port = serial.Serial('/dev/ttyACM0', 9600)
     cam = cv2.VideoCapture(camera_port)
     angle_values = [0, 45, 90, 135]
     images = {a: 0 for a in angle_values}
@@ -22,6 +22,12 @@ def main(n_value: float, model_name: str, camera_port: int):
         cv2.imwrite(f'results/{model_name}/polarization_{angle}.jpg', images[angle])
     res = polarization(images[0], images[90], images[45], images[135])
     aop, dolp = res['angle_of_polarization'], res['linear_polarizatioin_degree']
+    fig, ax = plt.subplots(1, 2, figsize = (12, 5), dpi = 200)
+    im = ax[0].imshow(aop, cmap = 'rainbow')
+    plt.colorbar(im, ax = ax[0])
+    im = ax[1].imshow(dolp, cmap = 'jet')
+    plt.colorbar(im, ax = ax[1])
+    plt.savefig("dolp_aop.png")
     theta = polarization_degree_to_reflection_angle(dolp, n_value)
     normal_map = np.array([np.tan(theta) * np.cos(aop),
                         np.tan(theta * np.sin(aop)),
@@ -34,12 +40,12 @@ def main(n_value: float, model_name: str, camera_port: int):
     cv2.imwrite(f'results/{model_name}/normal_map.png', normal_map * 255)
     depth_map = normal_map_least_square_integration(normal_map)
     depth_map /= np.max(np.abs(depth_map))
-    mask = dolp < 1e-2 * 5 
+    mask = dolp < 1e-5
     x, y = np.arange(depth_map.shape[0]), np.arange(depth_map.shape[1])
     X, Y = np.meshgrid(x, y)
     Z = np.copy(depth_map)
     Z[mask] = 0
-    Z = gaussian_filter(Z, sigma = 1)
+    Z = gaussian_filter(Z, sigma = 0)
     fig = plt.figure(figsize = (12, 12), dpi = 200)
     angles = [0, 20, 60, 140]
     for i, a in enumerate(angles): 

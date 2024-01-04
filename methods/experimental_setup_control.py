@@ -12,7 +12,7 @@ def get_img(polarization_angle: int, port, cam) -> np.ndarray:
     Returns:
         np.ndarray: чб фотография
     """
-    polarization_angle_to_angle = {0: 15, 45: 120, 135: 65, 90: 180}
+    polarization_angle_to_angle = {0: 0, 45: 45, 135: 135, 90: 90}
     port.write(bytes(str(polarization_angle_to_angle[polarization_angle]), 'utf-8'))
     time.sleep(2)
     _, frame = cam.read()
