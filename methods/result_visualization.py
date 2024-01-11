@@ -13,7 +13,7 @@ def visualize_dolp_and_aop(dolp: np.ndarray, aop: np.ndarray, s0: np.ndarray, sa
         save_path (str): Путь для сохранения результата
     """
     fig, ax = plt.subplots(1, 3, figsize=(16, 5), dpi=200)
-    ax[0].imshow(s0, cmap='greys')
+    ax[0].imshow(s0, cmap='Greys')
     ax[0].set_title("$S_{0}$", fontsize=16)
     im = ax[1].imshow(aop, cmap='rainbow')
     plt.colorbar(im, ax=ax[1])

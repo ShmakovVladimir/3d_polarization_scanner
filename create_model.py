@@ -9,7 +9,7 @@ from methods.normal_map_integration import *
 from methods.photos_to_stokes import *
 from methods.experimental_setup_control import *
 from methods.result_visualization import *
-from .methods.normal_map import *
+from methods.normal_map import *
 
 
 def main(n_value: float, model_name: str, camera_port: int):
@@ -24,6 +24,7 @@ def main(n_value: float, model_name: str, camera_port: int):
         images[angle] = get_img(angle, port=port, cam=cam)
         cv2.imwrite(
             f'results/{model_name}/polarization_{angle}.jpg', images[angle])
+        print(f"Фотографирую под углом {angle}")
     res = polarization(images[0], images[90], images[45], images[135])
     aop, dolp = res['angle_of_polarization'], res['linear_polarizatioin_degree']
     visualize_dolp_and_aop(
@@ -35,9 +36,9 @@ def main(n_value: float, model_name: str, camera_port: int):
     cv2.imwrite(f'results/{model_name}/normal_map.png', normal_map * 255)
     depth_map = normal_map_least_square_integration(normal_map)
     depth_map /= np.max(np.abs(depth_map))
-    mask = dolp < 1e-5
+    mask = dolp < 1e-2
     depth_map[mask] = 0
-    visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=1),
+    visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=3),
                         save_path=f'results/{model_name}/')
 
 
