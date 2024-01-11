@@ -10,23 +10,48 @@ from methods.photos_to_stokes import *
 from methods.experimental_setup_control import *
 from methods.result_visualization import *
 from methods.normal_map import *
+import glob
+
+
+def find_ports():
+    ports = glob.glob('/dev/ttyACM[0-9]*')
+
+    res = []
+    for port in ports:
+        try:
+            s = serial.Serial(port, 9600)
+            return s
+        except:
+            pass
+
+
+def scale(val, src, dst):
+    """
+    Scale the given value from the scale of src to the scale of dst.
+    """
+    return ((val - src[0]) / (src[1]-src[0])) * (dst[1]-dst[0]) + dst[0]
 
 
 def main(n_value: float, model_name: str, camera_port: int):
+    # port = serial.Serial('/dev/ttyACM0', 9600)
+    port = find_ports()
+    cam = cv2.VideoCapture(camera_port)
     parent_dir = os.getcwd()
     path = os.path.join(parent_dir, f'results/{model_name}')
     os.mkdir(path)
-    port = serial.Serial('/dev/ttyACM0', 9600)
-    cam = cv2.VideoCapture(camera_port)
     angle_values = [0, 45, 90, 135]
     images = {a: 0 for a in angle_values}
     for angle in [0, 45, 90, 135]:
+        print(f"Фотографирую под углом {angle}")
         images[angle] = get_img(angle, port=port, cam=cam)
         cv2.imwrite(
             f'results/{model_name}/polarization_{angle}.jpg', images[angle])
-        print(f"Фотографирую под углом {angle}")
-    res = polarization(images[0], images[90], images[45], images[135])
+    res = polarization(polarization_0=images[0],
+                       polarization_90=images[90],
+                       polarization_45=images[45],
+                       polarization_135=images[135])
     aop, dolp = res['angle_of_polarization'], res['linear_polarizatioin_degree']
+    dolp = scale(dolp, [0, 1], [1, 0])
     visualize_dolp_and_aop(
         dolp, aop, res['s0'], save_path=f'results/{model_name}/')
     theta = polarization_degree_to_reflection_angle(dolp, n_value)
@@ -38,7 +63,7 @@ def main(n_value: float, model_name: str, camera_port: int):
     depth_map /= np.max(np.abs(depth_map))
     mask = dolp < 1e-2
     depth_map[mask] = 0
-    visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=3),
+    visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=0),
                         save_path=f'results/{model_name}/')
 
 
