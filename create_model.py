@@ -25,6 +25,14 @@ def find_ports():
             pass
 
 
+def threshold_black(res: dict, polarization_0, polarization_45, polarization_135, polarization_90, thr=20) -> dict:
+    max_intensity = np.stack(
+        [polarization_0, polarization_45, polarization_135, polarization_90], axis=2)
+    max_intensity = np.min(max_intensity, axis=2)
+    res['linear_polarizatioin_degree'] = (
+        max_intensity > thr) * res['linear_polarizatioin_degree']
+
+
 def scale(val, src, dst):
     """
     Scale the given value from the scale of src to the scale of dst.
@@ -35,36 +43,40 @@ def scale(val, src, dst):
 def main(n_value: float, model_name: str, camera_port: int):
     # port = serial.Serial('/dev/ttyACM0', 9600)
     port = find_ports()
-    cam = cv2.VideoCapture(camera_port)
     parent_dir = os.getcwd()
-    path = os.path.join(parent_dir, f'results/{model_name}')
+    path = os.path.join(parent_dir, f'lal/{model_name}')
     os.mkdir(path)
     angle_values = [0, 45, 90, 135]
     images = {a: 0 for a in angle_values}
     for angle in [0, 45, 90, 135]:
+        cam = cv2.VideoCapture(camera_port)
         print(f"Фотографирую под углом {angle}")
         images[angle] = get_img(angle, port=port, cam=cam)
         cv2.imwrite(
-            f'results/{model_name}/polarization_{angle}.jpg', images[angle])
+            f'lal/{model_name}/polarization_{angle}.jpg', images[angle])
+        cam.release()
     res = polarization(polarization_0=images[0],
                        polarization_90=images[90],
                        polarization_45=images[45],
                        polarization_135=images[135])
+    # threshold_black(res, polarization_0=images[0],
+    #                 polarization_90=images[90],
+    #                 polarization_45=images[45],
+    #                 polarization_135=images[135], thr=10)
     aop, dolp = res['angle_of_polarization'], res['linear_polarizatioin_degree']
-    #dolp = scale(dolp, [0, 1], [1, 0])
     visualize_dolp_and_aop(
-        dolp, aop, res['s0'], save_path=f'results/{model_name}/')
+        dolp, aop, res['s0'], save_path=f'lal/{model_name}/')
     theta = polarization_degree_to_reflection_angle(dolp, n_value)
     normal_map = get_normal_map(aop, theta)
     low_dolp = res['linear_polarizatioin_degree'] < 1e-2
     normal_map[low_dolp] = np.zeros(3)
-    cv2.imwrite(f'results/{model_name}/normal_map.png', normal_map * 255)
+    cv2.imwrite(f'lal/{model_name}/normal_map.png', normal_map * 255)
     depth_map = normal_map_least_square_integration(normal_map)
     depth_map /= np.max(np.abs(depth_map))
     mask = dolp < 1e-2
     # depth_map[mask] = 0
     visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=3),
-                        save_path=f'results/{model_name}/')
+                        save_path=f'lal/{model_name}/')
 
 
 if __name__ == '__main__':
