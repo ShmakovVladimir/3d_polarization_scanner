@@ -51,7 +51,7 @@ def main(n_value: float, model_name: str, camera_port: int):
                        polarization_45=images[45],
                        polarization_135=images[135])
     aop, dolp = res['angle_of_polarization'], res['linear_polarizatioin_degree']
-    dolp = scale(dolp, [0, 1], [1, 0])
+    #dolp = scale(dolp, [0, 1], [1, 0])
     visualize_dolp_and_aop(
         dolp, aop, res['s0'], save_path=f'results/{model_name}/')
     theta = polarization_degree_to_reflection_angle(dolp, n_value)
@@ -62,8 +62,8 @@ def main(n_value: float, model_name: str, camera_port: int):
     depth_map = normal_map_least_square_integration(normal_map)
     depth_map /= np.max(np.abs(depth_map))
     mask = dolp < 1e-2
-    depth_map[mask] = 0
-    visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=0),
+    # depth_map[mask] = 0
+    visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=3),
                         save_path=f'results/{model_name}/')
 
 

@@ -11,8 +11,9 @@ def get_normal_map(aop: np.ndarray, theta: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Карта нормалей вида (p(x, y), q(x, y), 1)
     """
-    normal_map = np.array([np.tan(theta) * np.cos(aop),
-                           np.tan(theta * np.sin(aop)),
+    normal_map = np.array([np.sin(theta) * np.cos(aop) / (np.cos(theta) + 1e-2),
+                           np.sin(theta * np.sin(aop)) /
+                           (np.cos(theta) + 1e-2),
                            np.ones_like(theta)]).T
     normal_map = np.swapaxes(normal_map, 0, 1)
     normal_map /= np.linalg.norm(normal_map, ord=2, keepdims=True, axis=2)
