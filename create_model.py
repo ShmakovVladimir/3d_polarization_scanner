@@ -44,7 +44,7 @@ def main(n_value: float, model_name: str, camera_port: int):
     # port = serial.Serial('/dev/ttyACM0', 9600)
     port = find_ports()
     parent_dir = os.getcwd()
-    path = os.path.join(parent_dir, f'lal/{model_name}')
+    path = os.path.join(parent_dir, f'lll/{model_name}')
     os.mkdir(path)
     angle_values = [0, 45, 90, 135]
     images = {a: 0 for a in angle_values}
@@ -53,7 +53,7 @@ def main(n_value: float, model_name: str, camera_port: int):
         print(f"Фотографирую под углом {angle}")
         images[angle] = get_img(angle, port=port, cam=cam)
         cv2.imwrite(
-            f'lal/{model_name}/polarization_{angle}.jpg', images[angle])
+            f'lll/{model_name}/polarization_{angle}.jpg', images[angle])
         cam.release()
     res = polarization(polarization_0=images[0],
                        polarization_90=images[90],
@@ -65,18 +65,18 @@ def main(n_value: float, model_name: str, camera_port: int):
     #                 polarization_135=images[135], thr=10)
     aop, dolp = res['angle_of_polarization'], res['linear_polarizatioin_degree']
     visualize_dolp_and_aop(
-        dolp, aop, res['s0'], save_path=f'lal/{model_name}/')
+        dolp, aop, res['s0'], save_path=f'lll/{model_name}/')
     theta = polarization_degree_to_reflection_angle(dolp, n_value)
     normal_map = get_normal_map(aop, theta)
     low_dolp = res['linear_polarizatioin_degree'] < 1e-2
     normal_map[low_dolp] = np.zeros(3)
-    cv2.imwrite(f'lal/{model_name}/normal_map.png', normal_map * 255)
+    cv2.imwrite(f'lll/{model_name}/normal_map.png', normal_map * 255)
     depth_map = normal_map_least_square_integration(normal_map)
     depth_map /= np.max(np.abs(depth_map))
     mask = dolp < 1e-2
     # depth_map[mask] = 0
     visualize_depth_map(gaussian_filter(np.abs(depth_map), sigma=3),
-                        save_path=f'lal/{model_name}/')
+                        save_path=f'lll/{model_name}/')
 
 
 if __name__ == '__main__':
